@@ -108,7 +108,7 @@ async fn openroute_calculate(
     Ok(response)
 }
 
-pub fn export_to_maps_url(waypoints: &Vec<Waypoint>) -> String {
+pub fn export_to_maps_url(waypoints: &[Waypoint]) -> String {
     let mode = "3e0";
 
     let encoded_waypoints: Vec<String> = waypoints

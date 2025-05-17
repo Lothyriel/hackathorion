@@ -43,7 +43,7 @@ impl RouteRepository for Database {
                 waypoints.push(waypoint);
             }
 
-            let points = waypoints
+            let points: Vec<_> = waypoints
                 .iter()
                 .map(|w| Waypoint {
                     lat: w.coord().0,
