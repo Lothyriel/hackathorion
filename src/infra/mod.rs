@@ -46,8 +46,8 @@ impl RouteRepository for Database {
             let points: Vec<_> = waypoints
                 .iter()
                 .map(|w| Waypoint {
-                    lat: w.coord().0,
-                    lon: w.coord().1,
+                    lat: w.coord().1,
+                    lon: w.coord().0,
                 })
                 .collect();
 
