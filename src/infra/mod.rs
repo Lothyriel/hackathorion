@@ -1,14 +1,18 @@
 pub mod dto;
 
 use anyhow::Error;
-use dto::{PoiDto, RouteDto, RouteVm};
+use dto::{ComercialPoiDto, PoiDto, RouteDto, RouteVm, TouristPoiDto};
 use futures::stream::TryStreamExt;
 use mongodb::{
     Database,
     bson::{doc, oid::ObjectId},
 };
+use urlencoding::encode;
 
-use crate::app::poi::{Poi, PoiFilter};
+use crate::app::{
+    poi::{Poi, PoiFilter},
+    route::{Waypoint, export_to_maps_url},
+};
 
 type DbResult<T> = Result<T, Error>;
 
@@ -39,11 +43,20 @@ impl RouteRepository for Database {
                 waypoints.push(waypoint);
             }
 
+            let points = waypoints
+                .iter()
+                .map(|w| Waypoint {
+                    lat: w.coord().0,
+                    lon: w.coord().1,
+                })
+                .collect();
+
             output.push(RouteVm {
                 waypoints,
                 id: route.id,
                 image: route.image,
                 title: route.title,
+                google_maps_route: export_to_maps_url(&points),
             });
         }
 
@@ -51,8 +64,48 @@ impl RouteRepository for Database {
     }
 }
 
+fn export_maps_location(point: &Waypoint) -> String {
+    let query = format!("{},{}", point.lat, point.lon);
+    let encoded_query = encode(&query).to_string();
+
+    format!(
+        "https://www.google.com/maps/search/?api=1&query={}",
+        encoded_query
+    )
+}
+
 impl PoiRepository for Database {
     async fn add(&self, poi: Poi) -> DbResult<()> {
+        let poi = match poi {
+            Poi::Comercial(poi) => PoiDto::Comercial(ComercialPoiDto {
+                approved: poi.approved,
+                coords: poi.coords,
+                description: poi.description,
+                google_maps_route: export_maps_location(&Waypoint {
+                    lat: poi.coords.0,
+                    lon: poi.coords.1,
+                }),
+                id: ObjectId::new(),
+                images: poi.images,
+                instagram: poi.instagram,
+                tags: poi.tags,
+                name: poi.name,
+            }),
+            Poi::Tourist(poi) => PoiDto::Tourist(TouristPoiDto {
+                approved: poi.approved,
+                coords: poi.coords,
+                description: poi.description,
+                google_maps_route: export_maps_location(&Waypoint {
+                    lat: poi.coords.0,
+                    lon: poi.coords.1,
+                }),
+                id: ObjectId::new(),
+                images: poi.images,
+                tags: poi.tags,
+                name: poi.name,
+            }),
+        };
+
         self.collection("poi").insert_one(poi).await?;
 
         Ok(())

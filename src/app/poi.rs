@@ -44,27 +44,28 @@ pub struct PoiFilter {
 
 #[derive(Deserialize, Serialize)]
 pub struct ComercialPoi {
-    name: String,
-    description: String,
-    images: Vec<String>,
-    coords: Coordinates,
-    tags: Vec<String>,
-    instagram: String,
+    pub name: String,
+    pub description: String,
+    pub images: Vec<String>,
+    pub coords: Coordinates,
+    pub tags: Vec<String>,
+
+    pub instagram: String,
     #[serde(default)]
-    approved: bool,
+    pub approved: bool,
 }
 
 pub type Coordinates = (f64, f64);
 
 #[derive(Deserialize, Serialize)]
 pub struct TouristPoi {
-    name: String,
-    description: String,
-    images: Vec<String>,
-    coords: Coordinates,
-    tags: Vec<String>,
+    pub name: String,
+    pub description: String,
+    pub images: Vec<String>,
+    pub coords: Coordinates,
+    pub tags: Vec<String>,
     #[serde(default)]
-    approved: bool,
+    pub approved: bool,
 }
 
 #[derive(Deserialize, Serialize)]

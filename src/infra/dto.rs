@@ -8,27 +8,29 @@ use crate::app::poi::Coordinates;
 pub struct ComercialPoiDto {
     #[serde(rename = "_id")]
     #[serde(serialize_with = "serialize_object_id_as_hex_string")]
-    id: ObjectId,
-    name: String,
-    description: String,
-    image: String,
-    coords: Coordinates,
-    tags: Vec<String>,
-    instagram: String,
-    approved: bool,
+    pub id: ObjectId,
+    pub name: String,
+    pub description: String,
+    pub images: Vec<String>,
+    pub coords: Coordinates,
+    pub tags: Vec<String>,
+    pub instagram: String,
+    pub approved: bool,
+    pub google_maps_route: String,
 }
 
 #[derive(Deserialize, Serialize)]
 pub struct TouristPoiDto {
     #[serde(rename = "_id")]
     #[serde(serialize_with = "serialize_object_id_as_hex_string")]
-    id: ObjectId,
-    name: String,
-    description: String,
-    image: String,
-    coords: Coordinates,
-    tags: Vec<String>,
-    approved: bool,
+    pub id: ObjectId,
+    pub name: String,
+    pub description: String,
+    pub images: Vec<String>,
+    pub coords: Coordinates,
+    pub tags: Vec<String>,
+    pub approved: bool,
+    pub google_maps_route: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -36,6 +38,15 @@ pub struct TouristPoiDto {
 pub enum PoiDto {
     Comercial(ComercialPoiDto),
     Tourist(TouristPoiDto),
+}
+
+impl PoiDto {
+    pub fn coord(&self) -> Coordinates {
+        match self {
+            PoiDto::Comercial(poi) => poi.coords,
+            PoiDto::Tourist(poi) => poi.coords,
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -46,6 +57,7 @@ pub struct RouteVm {
     pub waypoints: Vec<PoiDto>,
     pub image: String,
     pub title: String,
+    pub google_maps_route: String,
 }
 
 #[derive(Deserialize)]

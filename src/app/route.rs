@@ -45,7 +45,7 @@ fn extract_waypoint_coordinates(response: ORSResponse) -> Result<RouteInfo, anyh
     Ok(RouteInfo {
         distance: route.summary.distance,
         duration: route.summary.duration,
-        google_maps_route: export_to_maps_url(waypoints.clone()),
+        google_maps_route: export_to_maps_url(&waypoints),
         waypoints,
     })
 }
@@ -69,9 +69,9 @@ pub struct Summary {
 }
 
 #[derive(Debug, Serialize, Clone, Copy)]
-struct Waypoint {
-    lat: f64,
-    lon: f64,
+pub struct Waypoint {
+    pub lat: f64,
+    pub lon: f64,
 }
 
 #[derive(Debug, Serialize)]
@@ -108,7 +108,7 @@ async fn openroute_calculate(
     Ok(response)
 }
 
-fn export_to_maps_url(waypoints: Vec<Waypoint>) -> String {
+pub fn export_to_maps_url(waypoints: &Vec<Waypoint>) -> String {
     let mode = "3e0";
 
     let encoded_waypoints: Vec<String> = waypoints
