@@ -45,7 +45,7 @@ pub struct PoiFilter {
 pub struct ComercialPoi {
     name: String,
     description: String,
-    image: String,
+    images: Vec<String>,
     coords: Coordinates,
     tags: Vec<String>,
     instagram: String,
@@ -59,7 +59,7 @@ pub type Coordinates = (f64, f64);
 pub struct TouristPoi {
     name: String,
     description: String,
-    image: String,
+    images: Vec<String>,
     coords: Coordinates,
     tags: Vec<String>,
     #[serde(default)]
@@ -82,7 +82,7 @@ mod tests {
         let a = Poi::Comercial(ComercialPoi {
             name: "Fast Lanches".to_string(),
             description: "Lanchonete muito legal".to_string(),
-            image: "".to_string(),
+            images: vec!["".to_string()],
             coords: (-27.8187689345354, -50.33193942426937),
             tags: vec!["restaurante".to_string()],
             instagram: "@fast.lages".to_string(),
