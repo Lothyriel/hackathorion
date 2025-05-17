@@ -31,7 +31,7 @@ async fn main() {
 
     let app = router(state);
 
-    let address = (Ipv4Addr::UNSPECIFIED, 3000);
+    let address = (Ipv4Addr::UNSPECIFIED, 8080);
     tracing::debug!("Server running on {:?}", address);
 
     let listener = tokio::net::TcpListener::bind(address)
