@@ -107,9 +107,6 @@ async fn openroute_calculate(
 }
 
 fn export_to_maps_url(waypoints: Vec<Waypoint>) -> String {
-    let center_lat = 1.2357379;
-    let center_lng = -36.0811227;
-    let zoom = 4;
     let mode = "3e0";
 
     let encoded_waypoints: Vec<String> = waypoints
@@ -118,11 +115,8 @@ fn export_to_maps_url(waypoints: Vec<Waypoint>) -> String {
         .collect();
 
     let url = format!(
-        "https://www.google.com/maps/dir/{}/@{},{},{}z/data=!{}",
+        "https://www.google.com/maps/dir/{}/data=!{}",
         encoded_waypoints.join("/"),
-        center_lat,
-        center_lng,
-        zoom,
         mode,
     );
 
