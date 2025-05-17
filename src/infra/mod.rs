@@ -1,6 +1,7 @@
-mod dto;
+pub mod dto;
 
 use anyhow::Error;
+use dto::PoiDto;
 use futures::stream::TryStreamExt;
 use mongodb::{
     Database,
@@ -13,7 +14,7 @@ type DbResult<T> = Result<T, Error>;
 
 pub trait PoiRepository {
     async fn add(&self, poi: Poi) -> DbResult<()>;
-    async fn get(&self, tags: PoiFilter) -> DbResult<Vec<Poi>>;
+    async fn get(&self, tags: PoiFilter) -> DbResult<Vec<PoiDto>>;
     async fn put(&self, id: ObjectId, poi: Poi) -> DbResult<()>;
 }
 
@@ -24,7 +25,7 @@ impl PoiRepository for Database {
         Ok(())
     }
 
-    async fn get(&self, filter: PoiFilter) -> DbResult<Vec<Poi>> {
+    async fn get(&self, filter: PoiFilter) -> DbResult<Vec<PoiDto>> {
         let mut doc_filter = doc! {
             "approved": filter.approved
         };

@@ -2,14 +2,14 @@ use axum::extract::{Path, Query, State};
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 
-use crate::infra::PoiRepository;
+use crate::infra::{PoiRepository, dto::PoiDto};
 
 use super::{ApiResult, AppState, Json, MessageResponse};
 
 pub async fn get(
     State(state): State<AppState>,
     Query(query): Query<PoiFilter>,
-) -> ApiResult<Vec<Poi>> {
+) -> ApiResult<Vec<PoiDto>> {
     let points = state.db().get(query).await?;
 
     Ok(Json(points))
@@ -36,6 +36,7 @@ pub async fn add(
 
 #[derive(Deserialize)]
 pub struct PoiFilter {
+    #[serde(default)]
     pub tags: Vec<String>,
     pub approved: bool,
 }
@@ -45,22 +46,28 @@ pub struct ComercialPoi {
     name: String,
     description: String,
     image: String,
-    coords: (f32, f32),
+    coords: Coordinates,
     tags: Vec<String>,
     instagram: String,
+    #[serde(default)]
+    approved: bool,
 }
+
+pub type Coordinates = (f64, f64);
 
 #[derive(Deserialize, Serialize)]
 pub struct TouristPoi {
     name: String,
     description: String,
     image: String,
-    coords: (f32, f32),
+    coords: Coordinates,
     tags: Vec<String>,
+    #[serde(default)]
+    approved: bool,
 }
 
 #[derive(Deserialize, Serialize)]
-#[serde(tag = "type", content = "data")]
+#[serde(tag = "type")]
 pub enum Poi {
     Comercial(ComercialPoi),
     Tourist(TouristPoi),
@@ -68,13 +75,19 @@ pub enum Poi {
 
 #[cfg(test)]
 mod tests {
-    use crate::app::route::RouteParams;
+    use crate::app::poi::{ComercialPoi, Poi};
 
     #[test]
     fn test_add() {
-        let a = RouteParams {
-            waypoints: vec![(30.0, 30.0)],
-        };
+        let a = Poi::Comercial(ComercialPoi {
+            name: "Fast Lanches".to_string(),
+            description: "Lanchonete muito legal".to_string(),
+            image: "".to_string(),
+            coords: (-27.8187689345354, -50.33193942426937),
+            tags: vec!["restaurante".to_string()],
+            instagram: "@fast.lages".to_string(),
+            approved: false,
+        });
 
         let a = serde_json::to_string(&a).unwrap();
 

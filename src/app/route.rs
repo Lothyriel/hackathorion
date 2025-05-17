@@ -3,7 +3,7 @@ use polyline::decode_polyline;
 use serde_json::json;
 use urlencoding::encode;
 
-use super::{ApiResult, AppState, Json};
+use super::{ApiResult, AppState, Json, poi::Coordinates};
 
 pub async fn calculate(
     State(state): State<AppState>,
@@ -80,7 +80,7 @@ async fn openroute_calculate(
     state: AppState,
     params: RouteParams,
 ) -> Result<ORSResponse, anyhow::Error> {
-    let coordinates: Vec<[f32; 2]> = params.waypoints.iter().map(|p| [p.1, p.0]).collect();
+    let coordinates: Vec<[f64; 2]> = params.waypoints.iter().map(|p| [p.1, p.0]).collect();
 
     let body = json!({
         "coordinates": coordinates,
@@ -148,10 +148,10 @@ pub struct CandidateRoute {
 
 #[derive(Deserialize, Serialize)]
 pub struct RouteParams {
-    pub waypoints: Vec<(f32, f32)>,
+    pub waypoints: Vec<Coordinates>,
 }
 
 #[derive(Serialize)]
 pub struct RouteWaypoints {
-    waypoints: Vec<(f32, f32)>,
+    waypoints: Vec<Coordinates>,
 }
