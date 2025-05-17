@@ -1,6 +1,13 @@
 use std::net::Ipv4Addr;
 
-use app::{AppState, db_conn, router};
+use app::{AppState, db_conn, route::Waypoint, router};
+use futures::TryStreamExt;
+use infra::export_maps_location;
+use mongodb::{
+    Client, Collection,
+    bson::{self, doc},
+    options::ClientOptions,
+};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod app;
@@ -10,6 +17,40 @@ macro_rules! expect_env {
     ($var_name:expr) => {
         std::env::var($var_name).expect(concat!("env missing: ", $var_name))
     };
+}
+
+async fn migrate() -> mongodb::error::Result<()> {
+    // Connect to MongoDB
+    let client_uri = "mongodb+srv://hackathorion:XVYwdxE6fQlPqh3q@cluster.lykhh33.mongodb.net/?retryWrites=true&w=majority&appName=cluster";
+    let client_options = ClientOptions::parse(client_uri).await?;
+    let client = Client::with_options(client_options)?;
+
+    let db = client.database("hackathorion_api");
+    let collection: Collection<bson::Document> = db.collection("poi");
+
+    let mut cursor = collection.find(doc! {}).await?;
+
+    while let Some(doc) = cursor.try_next().await? {
+        let a = doc.get("coords").unwrap().as_array().unwrap();
+
+        let b = a.get(0).unwrap().as_f64().unwrap();
+        let c = a.get(1).unwrap().as_f64().unwrap();
+
+        if let Some(id) = doc.get("_id") {
+            let update = doc! {
+                "$set": {
+                    "google_maps_route": export_maps_location(&Waypoint{lat: b, lon: c})
+                }
+            };
+
+            collection
+                .update_one(doc! { "_id": id.clone() }, update)
+                .await?;
+        }
+    }
+
+    println!("All documents updated.");
+    Ok(())
 }
 
 #[tokio::main]

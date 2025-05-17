@@ -57,6 +57,7 @@ pub struct RouteVm {
     pub waypoints: Vec<PoiDto>,
     pub image: String,
     pub title: String,
+    pub description: String,
     pub google_maps_route: String,
 }
 
@@ -66,5 +67,6 @@ pub struct RouteDto {
     pub id: ObjectId,
     pub waypoints: Vec<ObjectId>,
     pub image: String,
+    pub description: String,
     pub title: String,
 }

@@ -55,6 +55,7 @@ impl RouteRepository for Database {
                 waypoints,
                 id: route.id,
                 image: route.image,
+                description: route.description,
                 title: route.title,
                 google_maps_route: export_to_maps_url(&points),
             });
@@ -64,7 +65,7 @@ impl RouteRepository for Database {
     }
 }
 
-fn export_maps_location(point: &Waypoint) -> String {
+pub fn export_maps_location(point: &Waypoint) -> String {
     let query = format!("{},{}", point.lat, point.lon);
     let encoded_query = encode(&query).to_string();
 
