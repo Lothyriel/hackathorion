@@ -37,3 +37,22 @@ pub enum PoiDto {
     Comercial(ComercialPoiDto),
     Tourist(TouristPoiDto),
 }
+
+#[derive(Serialize)]
+pub struct RouteVm {
+    #[serde(rename = "_id")]
+    #[serde(serialize_with = "serialize_object_id_as_hex_string")]
+    pub id: ObjectId,
+    pub waypoints: Vec<PoiDto>,
+    pub image: String,
+    pub title: String,
+}
+
+#[derive(Deserialize)]
+pub struct RouteDto {
+    #[serde(rename = "_id")]
+    pub id: ObjectId,
+    pub waypoints: Vec<ObjectId>,
+    pub image: String,
+    pub title: String,
+}

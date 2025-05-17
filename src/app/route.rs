@@ -3,6 +3,8 @@ use polyline::decode_polyline;
 use serde_json::json;
 use urlencoding::encode;
 
+use crate::infra::{RouteRepository, dto::RouteVm};
+
 use super::{ApiResult, AppState, Json, poi::Coordinates};
 
 pub async fn calculate(
@@ -11,11 +13,15 @@ pub async fn calculate(
 ) -> ApiResult<RouteInfo> {
     let res = openroute_calculate(state, params).await?;
 
-    tracing::warn!("{res:?}");
-
     let res = extract_waypoint_coordinates(res)?;
 
     Ok(Json(res))
+}
+
+pub async fn suggested(State(state): State<AppState>) -> ApiResult<Vec<RouteVm>> {
+    let routes = state.db().get().await?;
+
+    Ok(Json(routes))
 }
 
 fn extract_waypoint_coordinates(response: ORSResponse) -> Result<RouteInfo, anyhow::Error> {
@@ -97,11 +103,7 @@ async fn openroute_calculate(
         .send()
         .await?;
 
-    let response = res.text().await?;
-
-    tracing::warn!("{response:?}");
-
-    let response: ORSResponse = serde_json::from_str(&response).unwrap();
+    let response = res.json().await?;
 
     Ok(response)
 }
@@ -123,21 +125,17 @@ fn export_to_maps_url(waypoints: Vec<Waypoint>) -> String {
     url
 }
 
-pub async fn get_suggested(State(state): State<AppState>) -> Json<Vec<()>> {
-    todo!()
-}
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct RouteResponse {
-    pub routes: Vec<CandidateRoute>,
+    routes: Vec<CandidateRoute>,
 }
 
 #[derive(Deserialize)]
 pub struct CandidateRoute {
-    pub summary: Summary,
-    pub geometry: String,
+    summary: Summary,
+    geometry: String,
 }
 
 #[derive(Deserialize, Serialize)]

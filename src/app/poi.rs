@@ -1,4 +1,5 @@
-use axum::extract::{Path, Query, State};
+use axum::extract::{Path, State};
+use axum_extra::extract::Query;
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 
@@ -38,7 +39,7 @@ pub async fn add(
 pub struct PoiFilter {
     #[serde(default)]
     pub tags: Vec<String>,
-    pub approved: bool,
+    pub approved: Option<bool>,
 }
 
 #[derive(Deserialize, Serialize)]

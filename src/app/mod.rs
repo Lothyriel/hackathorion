@@ -1,5 +1,5 @@
 pub mod poi;
-mod route;
+pub mod route;
 
 use axum::{
     Router,
@@ -29,8 +29,8 @@ fn api_router(state: AppState) -> Router {
         .route("/poi", routing::get(poi::get))
         .route("/poi", routing::post(poi::add))
         .route("/poi/{id}", routing::put(poi::put))
-        .route("/routes/suggested", routing::get(route::get_suggested))
         .route("/routes", routing::post(route::calculate))
+        .route("/routes", routing::get(route::suggested))
         .with_state(state)
 }
 
