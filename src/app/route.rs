@@ -1,4 +1,5 @@
 use axum::extract::State;
+use polyline::decode_polyline;
 use serde_json::json;
 use urlencoding::encode;
 
@@ -7,46 +8,113 @@ use super::{ApiResult, AppState, Json};
 pub async fn calculate(
     State(state): State<AppState>,
     Json(params): Json<RouteParams>,
-) -> ApiResult<()> {
+) -> ApiResult<RouteInfo> {
     let res = openroute_calculate(state, params).await?;
 
-    todo!()
+    tracing::warn!("{res:?}");
+
+    let res = extract_waypoint_coordinates(res)?;
+
+    Ok(Json(res))
+}
+
+fn extract_waypoint_coordinates(response: ORSResponse) -> Result<RouteInfo, anyhow::Error> {
+    let route = response
+        .routes
+        .first()
+        .ok_or(anyhow::anyhow!("Invalid route"))?;
+
+    let decoded = decode_polyline(&route.geometry, 5)?;
+
+    let waypoints: Vec<Waypoint> = route
+        .way_points
+        .iter()
+        .filter_map(|&index| decoded.0.get(index))
+        .map(|coord| Waypoint {
+            lat: coord.x,
+            lon: coord.y,
+        })
+        .collect();
+
+    Ok(RouteInfo {
+        distance: route.summary.distance,
+        duration: route.summary.duration,
+        google_maps_route: export_to_maps_url(waypoints.clone()),
+        waypoints,
+    })
+}
+
+#[derive(Debug, Deserialize)]
+struct ORSResponse {
+    routes: Vec<Route>,
+}
+
+#[derive(Debug, Deserialize)]
+struct Route {
+    geometry: String,
+    way_points: Vec<usize>,
+    summary: Summary,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Summary {
+    distance: f64,
+    duration: f64,
+}
+
+#[derive(Debug, Serialize, Clone, Copy)]
+struct Waypoint {
+    lat: f64,
+    lon: f64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct RouteInfo {
+    distance: f64,
+    duration: f64,
+    waypoints: Vec<Waypoint>,
+    google_maps_route: String,
 }
 
 async fn openroute_calculate(
     state: AppState,
     params: RouteParams,
-) -> Result<RouteResponse, anyhow::Error> {
-    let coordinates: Vec<[f32; 2]> = params.waypoints.iter().map(|p| [p.0, p.1]).collect();
+) -> Result<ORSResponse, anyhow::Error> {
+    let coordinates: Vec<[f32; 2]> = params.waypoints.iter().map(|p| [p.1, p.0]).collect();
 
     let body = json!({
-        "coordinates": coordinates
+        "coordinates": coordinates,
+        "radiuses": vec![-1.0; coordinates.len()]
     });
+
+    tracing::warn!("body: {}", body);
 
     let res = state
         .http_client
-        .post("https://api.openrouteservice.org/v2/directions/driving-car")
+        .post("https://api.openrouteservice.org/v2/directions/driving-car/json")
         .header("Authorization", state.openroute_key)
-        .header("Content-Type", "application/json")
         .json(&body)
         .send()
         .await?;
 
-    let response = res.json().await?;
+    let response = res.text().await?;
+
+    tracing::warn!("{response:?}");
+
+    let response: ORSResponse = serde_json::from_str(&response).unwrap();
 
     Ok(response)
 }
 
-fn export_to_maps_url(params: RouteParams) {
+fn export_to_maps_url(waypoints: Vec<Waypoint>) -> String {
     let center_lat = 1.2357379;
     let center_lng = -36.0811227;
     let zoom = 4;
     let mode = "3e0";
 
-    let encoded_waypoints: Vec<String> = params
-        .waypoints
+    let encoded_waypoints: Vec<String> = waypoints
         .iter()
-        .map(|point| encode(&format!("{}, {}", point.0, point.1)).to_string())
+        .map(|point| encode(&format!("{}, {}", point.lon, point.lat)).to_string())
         .collect();
 
     let url = format!(
@@ -57,6 +125,8 @@ fn export_to_maps_url(params: RouteParams) {
         zoom,
         mode,
     );
+
+    url
 }
 
 pub async fn get_suggested(State(state): State<AppState>) -> Json<Vec<()>> {
@@ -74,21 +144,14 @@ pub struct RouteResponse {
 pub struct CandidateRoute {
     pub summary: Summary,
     pub geometry: String,
-    // You can add more fields here if needed, e.g. segments, way_points, etc.
 }
 
-#[derive(Deserialize)]
-pub struct Summary {
-    pub distance: f64,
-    pub duration: f64,
-}
-
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct RouteParams {
-    waypoints: Vec<(f32, f32)>,
+    pub waypoints: Vec<(f32, f32)>,
 }
 
 #[derive(Serialize)]
-pub struct Route {
+pub struct RouteWaypoints {
     waypoints: Vec<(f32, f32)>,
 }

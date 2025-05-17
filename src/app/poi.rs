@@ -56,17 +56,13 @@ pub enum Poi {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::app::route::RouteParams;
 
     #[test]
     fn test_add() {
-        let a = Poi::Tourist(TouristPoi {
-            name: "SEXO".to_string(),
-            description: "SEXO".to_string(),
-            image: "SEXO".to_string(),
-            coords: (0.0, 0.0),
-            tags: vec!["SEXO".to_string(), "SEXO2".to_string()],
-        });
+        let a = RouteParams {
+            waypoints: vec![(30.0, 30.0)],
+        };
 
         let a = serde_json::to_string(&a).unwrap();
 

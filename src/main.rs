@@ -26,10 +26,6 @@ async fn main() {
         )
         .init();
 
-    std::panic::set_hook(Box::new(|panic_info| {
-        tracing::error!("FATAL Error: {:?}", panic_info);
-    }));
-
     dotenvy::dotenv().ok();
 
     let db = db_conn(&expect_env!("MONGODB_URI")).await;
