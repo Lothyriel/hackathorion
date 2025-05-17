@@ -1,4 +1,5 @@
-mod poi;
+pub mod poi;
+mod route;
 
 use axum::{
     Router,
@@ -31,9 +32,10 @@ async fn not_found() -> impl IntoResponse {
 
 fn api_router(state: AppState) -> Router {
     Router::new()
-        .route("/points-of-interest", routing::get(poi::get))
-        .route("/route/calculate", routing::post(route::calculate))
-        .route("/route/suggested", routing::get(route::suggested))
+        .route("/points", routing::get(poi::get))
+        .route("/points", routing::post(poi::add))
+        .route("/routes/suggested", routing::get(route::get_suggested))
+        .route("/routes", routing::post(route::calculate))
         .with_state(state)
 }
 
@@ -44,7 +46,7 @@ pub struct AppState {
 
 impl AppState {
     pub fn db(&self) -> Database {
-        self.conn.database("api")
+        self.conn.database("hackathorion_api")
     }
 
     pub fn new(conn: Client) -> Self {
@@ -63,6 +65,12 @@ pub async fn db_conn() -> Client {
 }
 
 pub struct AppError(anyhow::Error);
+
+impl From<anyhow::Error> for AppError {
+    fn from(value: anyhow::Error) -> Self {
+        AppError(value)
+    }
+}
 
 pub type ApiResult<T> = Result<Json<T>, AppError>;
 

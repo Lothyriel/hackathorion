@@ -4,6 +4,7 @@ use app::{AppState, db_conn, router};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod app;
+mod infra;
 
 #[tokio::main]
 async fn main() {
@@ -42,4 +43,3 @@ async fn main() {
         .await
         .expect("Failed to start server")
 }
-
