@@ -6,6 +6,12 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 mod app;
 mod infra;
 
+macro_rules! expect_env {
+    ($var_name:expr) => {
+        std::env::var($var_name).expect(concat!("env missing: ", $var_name))
+    };
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::registry()
@@ -26,11 +32,13 @@ async fn main() {
 
     dotenvy::dotenv().ok();
 
-    let db = db_conn().await;
+    let db = db_conn(&expect_env!("MONGODB_URI")).await;
 
-    let state = AppState::new(db);
+    let state = AppState::new(db, expect_env!("OPEN_ROUTE_API_KEY"));
 
-    let app = router(state);
+    let cors = tower_http::cors::CorsLayer::permissive();
+
+    let app = router(state).layer(cors);
 
     let address = (Ipv4Addr::UNSPECIFIED, 8080);
     tracing::debug!("Server running on {:?}", address);

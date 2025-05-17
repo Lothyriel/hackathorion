@@ -48,8 +48,28 @@ pub struct TouristPoi {
 }
 
 #[derive(Deserialize, Serialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", content = "data")]
 pub enum Poi {
     Comercial(ComercialPoi),
     Tourist(TouristPoi),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add() {
+        let a = Poi::Tourist(TouristPoi {
+            name: "SEXO".to_string(),
+            description: "SEXO".to_string(),
+            image: "SEXO".to_string(),
+            cord: (0.0, 0.0),
+            tags: vec!["SEXO".to_string(), "SEXO2".to_string()],
+        });
+
+        let a = serde_json::to_string(&a).unwrap();
+
+        panic!("{a}");
+    }
 }

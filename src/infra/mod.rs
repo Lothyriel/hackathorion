@@ -1,3 +1,5 @@
+mod dto;
+
 use anyhow::Error;
 use futures::stream::TryStreamExt;
 use mongodb::{Database, bson::doc};
@@ -29,13 +31,4 @@ impl PoiRepository for Database {
 
         Ok(results)
     }
-
-    // async fn find_user(&self, username: &str) -> DbResult<Option<ReadHashedUser>> {
-    //     let result = self
-    //         .collection("users")
-    //         .find_one(doc! { "username": username })
-    //         .await?;
-    //
-    //     Ok(result)
-    // }
 }

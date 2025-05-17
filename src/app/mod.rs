@@ -10,12 +10,6 @@ use axum::{
 };
 use mongodb::{Client, Database};
 
-macro_rules! expect_env {
-    ($var_name:expr) => {
-        std::env::var($var_name).expect(concat!("env missing: ", $var_name))
-    };
-}
-
 pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/", routing::get(|| async { "healthy" }))
@@ -32,8 +26,8 @@ async fn not_found() -> impl IntoResponse {
 
 fn api_router(state: AppState) -> Router {
     Router::new()
-        .route("/points", routing::get(poi::get))
-        .route("/points", routing::post(poi::add))
+        .route("/poi", routing::get(poi::get))
+        .route("/poi", routing::post(poi::add))
         .route("/routes/suggested", routing::get(route::get_suggested))
         .route("/routes", routing::post(route::calculate))
         .with_state(state)
@@ -41,7 +35,9 @@ fn api_router(state: AppState) -> Router {
 
 #[derive(Clone)]
 pub struct AppState {
-    conn: Client,
+    conn: mongodb::Client,
+    http_client: reqwest::Client,
+    openroute_key: String,
 }
 
 impl AppState {
@@ -49,13 +45,17 @@ impl AppState {
         self.conn.database("hackathorion_api")
     }
 
-    pub fn new(conn: Client) -> Self {
-        Self { conn }
+    pub fn new(conn: Client, openroute_key: String) -> Self {
+        Self {
+            conn,
+            openroute_key,
+            http_client: reqwest::Client::new(),
+        }
     }
 }
 
-pub async fn db_conn() -> Client {
-    let client = Client::with_uri_str(expect_env!("MONGODB_URI"))
+pub async fn db_conn(uri: &str) -> Client {
+    let client = Client::with_uri_str(uri)
         .await
         .expect("Failed to connect to mongo instance");
 
