@@ -33,7 +33,7 @@ pub struct ComercialPoi {
     name: String,
     description: String,
     image: String,
-    cord: (f32, f32),
+    coords: (f32, f32),
     tags: Vec<String>,
     instagram: String,
 }
@@ -43,7 +43,7 @@ pub struct TouristPoi {
     name: String,
     description: String,
     image: String,
-    cord: (f32, f32),
+    coords: (f32, f32),
     tags: Vec<String>,
 }
 
@@ -64,7 +64,7 @@ mod tests {
             name: "SEXO".to_string(),
             description: "SEXO".to_string(),
             image: "SEXO".to_string(),
-            cord: (0.0, 0.0),
+            coords: (0.0, 0.0),
             tags: vec!["SEXO".to_string(), "SEXO2".to_string()],
         });
 

@@ -7,7 +7,7 @@ pub struct ComercialPoiDto {
     name: String,
     description: String,
     image: String,
-    cord: (f32, f32),
+    coords: (f32, f32),
     tags: Vec<String>,
     instagram: String,
 }
@@ -18,7 +18,7 @@ pub struct TouristPoiDto {
     name: String,
     description: String,
     image: String,
-    cord: (f32, f32),
+    coords: (f32, f32),
     tags: Vec<String>,
 }
 
