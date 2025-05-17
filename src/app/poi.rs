@@ -1,4 +1,5 @@
-use axum::extract::{Query, State};
+use axum::extract::{Path, Query, State};
+use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 
 use crate::infra::PoiRepository;
@@ -7,11 +8,21 @@ use super::{ApiResult, AppState, Json, MessageResponse};
 
 pub async fn get(
     State(state): State<AppState>,
-    Query(query): Query<TagsQuery>,
+    Query(query): Query<PoiFilter>,
 ) -> ApiResult<Vec<Poi>> {
-    let points = state.db().get(query.tags).await?;
+    let points = state.db().get(query).await?;
 
     Ok(Json(points))
+}
+
+pub async fn put(
+    State(state): State<AppState>,
+    Path(id): Path<ObjectId>,
+    Json(poi): Json<Poi>,
+) -> ApiResult<MessageResponse> {
+    state.db().put(id, poi).await?;
+
+    Ok(MessageResponse::new("resource modified"))
 }
 
 pub async fn add(
@@ -24,8 +35,9 @@ pub async fn add(
 }
 
 #[derive(Deserialize)]
-pub struct TagsQuery {
-    tags: Vec<String>,
+pub struct PoiFilter {
+    pub tags: Vec<String>,
+    pub approved: bool,
 }
 
 #[derive(Deserialize, Serialize)]

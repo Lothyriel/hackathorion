@@ -28,6 +28,7 @@ fn api_router(state: AppState) -> Router {
     Router::new()
         .route("/poi", routing::get(poi::get))
         .route("/poi", routing::post(poi::add))
+        .route("/poi/{id}", routing::put(poi::put))
         .route("/routes/suggested", routing::get(route::get_suggested))
         .route("/routes", routing::post(route::calculate))
         .with_state(state)
